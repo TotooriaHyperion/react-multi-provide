@@ -1,5 +1,5 @@
 import React from "react";
-import { useContexts, useReplaySubject } from "../../lib";
+import { useContexts, useReplaySubject } from "../..";
 import { ServiceA } from "./service";
 
 export const Inner2: React.FC = () => {
