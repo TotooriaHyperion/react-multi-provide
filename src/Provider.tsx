@@ -18,12 +18,11 @@ export const Providers: React.FC<ProvidersProps> = ({ contexts, children }) => {
     return {
       get(id) {
         const toInject = contextRef.current.get(id) || parentContexts.get(id);
-        // should allow unimplemented dependencies as user could handle it themselve.
-        // if (!toInject) {
-        //   throw new Error(
-        //     `Identifier: ${id} don't have implementation provided`,
-        //   );
-        // }
+        if (!toInject) {
+          throw new Error(
+            `Identifier: ${id} don't have implementation provided`,
+          );
+        }
         return toInject;
       },
       set() {

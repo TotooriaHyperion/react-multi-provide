@@ -18,8 +18,11 @@ export module ProvidersViewModel {
   // 但这种需求是切实存在的，因此先包一个对象来实现。
   export type ContextIdentifier<T = {}> = {
     // 这里是为了方便调试。
-    [Symbol.toStringTag]: () => string;
-  } & ({} | SubscribableWithInitialValue<T>);
+    // dummy: T 是为了让 typescript 可以 infer 出 type
+    [Symbol.toStringTag]: (dummy?: T) => string;
+    toString: () => string;
+    valueOf: () => string;
+  };
   export interface ContextFactory<I, P = unknown> {
     (params: P): I extends ContextIdentifier<infer C> ? C : never;
   }
