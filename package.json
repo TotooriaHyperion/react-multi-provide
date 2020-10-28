@@ -1,6 +1,6 @@
 {
   "name": "react-multi-provide",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "directories": {
     "lib": "lib",
@@ -22,6 +22,10 @@
   "license": "MIT",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TotooriaHyperion/react-multi-provide.git"
   },
   "dependencies": {
     "@types/react": "^16.9.52",
