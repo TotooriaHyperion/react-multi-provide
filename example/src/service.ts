@@ -1,4 +1,5 @@
 import { BehaviorSubject, Observable } from "rxjs";
+import { map } from "rxjs/operators";
 import { createId } from "../..";
 
 export module ServiceA {
@@ -21,4 +22,12 @@ export function createService(): ServiceA.Model {
       dec: () => subject.next(subject.getValue() - 1),
     },
   };
+}
+
+export module ServiceB {
+  export const id = createId<Observable<number>>(Symbol("ServiceB"));
+}
+
+export function createB(obs: Observable<number>) {
+  return obs.pipe(map((v) => v * 2));
 }

@@ -1,6 +1,7 @@
 import { useContext, useDebugValue, useEffect, useMemo } from "react";
 import { BehaviorSubject, combineLatest, Subscribable } from "rxjs";
 import { Subscription, useSubscription } from "use-subscription";
+import isArray from "lodash.isarray";
 import { ProvidersContext } from "./context";
 import { ProvidersViewModel } from "./types";
 
@@ -14,12 +15,25 @@ export function useContexts<T1, T2, T3>(
 export function useContexts<T1, T2, T3, T4>(
   sources: [ID<T1>, ID<T2>, ID<T3>, ID<T4>],
 ): [T1, T2, T3, T4];
-export function useContexts<T>(ids: ID<T>[]): T[] {
+export function useContexts<
+  T extends [...ProvidersViewModel.ContextIdentifier[]]
+>(
+  ...ids: T
+): {
+  [K in keyof T]: T[K] extends ProvidersViewModel.ContextIdentifier<infer P>
+    ? P
+    : never;
+};
+export function useContexts(...ids: any): any {
   const contexts = useContext(ProvidersContext);
-  const obs = useMemo(() => combineLatest(ids.map((id) => contexts.get(id))), [
-    ...ids,
-    contexts,
-  ]);
+  const first = ids[0];
+  let allIds: ProvidersViewModel.ContextIdentifier[] = ids;
+  if (isArray(first)) {
+    allIds = first;
+  }
+  const obs = useMemo(() => {
+    return combineLatest(allIds.map((id) => contexts.get(id)));
+  }, [...allIds, contexts]);
   const values = useReplaySubject(obs)!;
   useDebugValue(values);
   return values;
