@@ -22,6 +22,7 @@ export module ProvidersViewModel {
     [Symbol.toStringTag]: (dummy?: T) => string;
     toString: () => string;
     valueOf: () => string;
+    asId: <ID>() => ID;
   };
   export interface ContextFactory<I, P = unknown> {
     (params: P): I extends ContextIdentifier<infer C> ? C : never;
