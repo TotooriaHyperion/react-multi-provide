@@ -40,12 +40,24 @@ export function useContexts(...ids: any): any {
 }
 
 export function useCreateContexts(): ProvidersViewModel.ProvidersContextValue {
-  const store = useMemo<ProvidersViewModel.ProvidersContextValue>(
-    () => new WeakMap<ProvidersViewModel.ContextIdentifier, any>(),
-    [],
-  );
-  useDebugValue(store);
-  return store;
+  const parentContexts = useContext(ProvidersContext);
+  const contexts: ProvidersViewModel.ProvidersContextValue = useMemo<ProvidersViewModel.ProvidersContextValue>(() => {
+    const store = new WeakMap<ProvidersViewModel.ContextIdentifier, any>();
+    return {
+      get: (id) => {
+        const toInject = store.get(id) || parentContexts.get(id);
+        if (!toInject) {
+          throw new Error(
+            `Identifier: ${id} don't have implementation provided`,
+          );
+        }
+        return toInject;
+      },
+      set: store.set.bind(store),
+    };
+  }, [parentContexts]);
+  useDebugValue(contexts);
+  return contexts;
 }
 
 export function useProvide<T>(
