@@ -8,3 +8,4 @@ export const Outer: React.FC = ({ children }) => {
   useProvide(contexts, ServiceA.id, service);
   return <Providers contexts={contexts}>{children}</Providers>;
 };
+const d = ServiceA.id.symbolAs<number>();
