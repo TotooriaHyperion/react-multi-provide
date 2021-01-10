@@ -1,6 +1,7 @@
+import ReactDOM from "react-dom";
 import { BehaviorSubject, Observable } from "rxjs";
 import { map } from "rxjs/operators";
-import { createId } from "../..";
+import { createId } from "react-multi-provide";
 
 export module ServiceA {
   export interface Model {
@@ -18,8 +19,14 @@ export function createService(): ServiceA.Model {
   return {
     state$: subject,
     actions: {
-      inc: () => subject.next(subject.getValue() + 1),
-      dec: () => subject.next(subject.getValue() - 1),
+      inc: () =>
+        ReactDOM.unstable_batchedUpdates(() =>
+          subject.next(subject.getValue() + 1),
+        ),
+      dec: () =>
+        ReactDOM.unstable_batchedUpdates(() =>
+          subject.next(subject.getValue() - 1),
+        ),
     },
   };
 }

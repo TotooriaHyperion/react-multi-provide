@@ -1,0 +1,45 @@
+{
+  "name": "react-multi-provide",
+  "version": "2.0.0-alpha.2",
+  "description": "",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib",
+    "esm"
+  ],
+  "main": "lib/index.js",
+  "module": "esm/index.js",
+  "typings": "lib/index.d.ts",
+  "scripts": {
+    "watch": "tsc -w -p tsconfig.json",
+    "build": "rimraf -rf lib esm && tsc -p tsconfig.json && tsc -p tsconfig.esm.json",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "TieriaHyperion <totooriahyperion@icloud.com>",
+  "license": "MIT",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TotooriaHyperion/react-multi-provide.git"
+  },
+  "dependencies": {
+    "@types/lodash.isarray": "^4.0.6",
+    "@types/react": "*",
+    "@types/use-subscription": "*",
+    "lodash.isarray": "^4.0.0",
+    "rxjs": "^6.6.3",
+    "tslib": "^2.1.0",
+    "use-subscription": "*"
+  },
+  "peerDependencies": {
+    "react": "*"
+  },
+  "devDependencies": {
+    "react": "*"
+  }
+}

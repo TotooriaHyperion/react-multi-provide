@@ -1,5 +1,6 @@
 import { useContext, useDebugValue, useEffect, useMemo } from "react";
-import { BehaviorSubject, combineLatest, Subscribable } from "rxjs";
+import { BehaviorSubject, combineLatest, Observable } from "rxjs";
+import { skip } from "rxjs/operators";
 import { Subscription, useSubscription } from "use-subscription";
 import isArray from "lodash.isarray";
 import { ProvidersContext } from "./context";
@@ -31,10 +32,17 @@ export function useContexts(...ids: any): any {
   if (isArray(first)) {
     allIds = first;
   }
-  const obs = useMemo(() => {
-    return combineLatest(allIds.map((id) => contexts.get(id)));
+  const subscription = useMemo<Subscription<any[]>>(() => {
+    const obs = allIds.map((id) => contexts.get(id));
+    return {
+      subscribe: (cb) => {
+        const sub = combineLatest(obs).pipe(skip(1)).subscribe(cb);
+        return () => sub.unsubscribe();
+      },
+      getCurrentValue: () => obs.map((item) => item.getValue()),
+    };
   }, [...allIds, contexts]);
-  const values = useReplaySubject(obs)!;
+  const values = useSubscription(subscription)!;
   useDebugValue(values);
   return values;
 }
@@ -82,7 +90,7 @@ export function useInject<T>(id: ProvidersViewModel.ContextIdentifier<T>): T {
   const subscription = useMemo<Subscription<T>>(
     () => ({
       subscribe: (cb) => {
-        const sub = box.subscribe(cb);
+        const sub = box.pipe(skip(1)).subscribe(cb);
         return () => sub.unsubscribe();
       },
       getCurrentValue: () => box.getValue(),
@@ -92,11 +100,11 @@ export function useInject<T>(id: ProvidersViewModel.ContextIdentifier<T>): T {
   return useSubscription(subscription);
 }
 
-export function useReplaySubject<T>(replayed: Subscribable<T>): T | undefined {
+export function useReplaySubject<T>(replayed: Observable<T>): T | undefined {
   const subscription = useMemo<Subscription<T>>(
     () => ({
       subscribe: (cb) => {
-        const sub = replayed.subscribe(cb);
+        const sub = replayed.pipe(skip(1)).subscribe(cb);
         return () => sub.unsubscribe();
       },
       getCurrentValue: () => {

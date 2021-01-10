@@ -15,7 +15,5 @@
     // "noUnusedParameters": true,
     "strictNullChecks": true,
     "preserveWatchOutput": true
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules/**/*", "__tests__/**/*"]
+  }
 }

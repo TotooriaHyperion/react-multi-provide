@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "esnext"
+  },
+  "references": [
+    {
+      "path": "../react-multi-provide"
+    }
+  ],
+  "include": ["./src/**/*.ts", "./src/**/*.tsx"]
+}

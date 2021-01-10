@@ -2,9 +2,7 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "module": "esnext",
-    "outDir": "esm",
     "skipDefaultLibCheck": true,
-    "declaration": false,
     "skipLibCheck": true
   }
 }

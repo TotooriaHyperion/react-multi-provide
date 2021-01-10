@@ -1,13 +1,17 @@
 import React from "react";
-import { useInject, useReplaySubject } from "../..";
+import { useContexts, useReplaySubject } from "react-multi-provide";
+import { useChangeDetect, useRenderCount } from "./hooks";
 import { ServiceA } from "./service";
 
-export const Inner: React.FC = () => {
+export const Inner2: React.FC = () => {
+  const [serviceA] = useContexts([ServiceA.id]);
   const {
     state$,
     actions: { inc, dec },
-  } = useInject(ServiceA.id);
+  } = serviceA;
   const count = useReplaySubject(state$);
+  useRenderCount("Inner2");
+  useChangeDetect({ serviceA, count }, "Inner2");
   return (
     <>
       <p>{count}</p>
