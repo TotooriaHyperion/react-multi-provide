@@ -1,4 +1,5 @@
 import { useContext, useDebugValue, useEffect, useMemo } from "react";
+import ReactDOM from "react-dom";
 import { BehaviorSubject, combineLatest, Observable } from "rxjs";
 import { skip } from "rxjs/operators";
 import { Subscription, useSubscription } from "use-subscription";
@@ -79,7 +80,9 @@ export function useProvide<T>(
     return box;
   }, []);
   useEffect(() => {
-    subject.next(value);
+    ReactDOM.unstable_batchedUpdates(() => {
+      subject.next(value);
+    });
   }, [value, subject]);
 }
 

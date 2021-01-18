@@ -1,7 +1,7 @@
 import { Observable } from "rxjs";
 
 export module ProvidersViewModel {
-  export interface SubscribableWithInitialValue<T> extends Observable<T> {
+  export interface SubscribableWithInitialValue<T> extends Observable<any> {
     getValue: () => T;
   }
   export interface ProvidersContextValue {
