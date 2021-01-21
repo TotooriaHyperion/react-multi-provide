@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./react-multi-provide/tsconfig.esm.json"
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 import { useContext, useDebugValue, useEffect, useMemo } from "react";
-import { BehaviorSubject, combineLatest, Subscribable } from "rxjs";
+import ReactDOM from "react-dom";
+import { BehaviorSubject, combineLatest, Observable } from "rxjs";
+import { skip } from "rxjs/operators";
 import { Subscription, useSubscription } from "use-subscription";
 import isArray from "lodash.isarray";
 import { ProvidersContext } from "./context";
@@ -31,21 +33,40 @@ export function useContexts(...ids: any): any {
   if (isArray(first)) {
     allIds = first;
   }
-  const obs = useMemo(() => {
-    return combineLatest(allIds.map((id) => contexts.get(id)));
+  const subscription = useMemo<Subscription<any[]>>(() => {
+    const obs = allIds.map((id) => contexts.get(id));
+    return {
+      subscribe: (cb) => {
+        const sub = combineLatest(obs).pipe(skip(1)).subscribe(cb);
+        return () => sub.unsubscribe();
+      },
+      getCurrentValue: () => obs.map((item) => item.getValue()),
+    };
   }, [...allIds, contexts]);
-  const values = useReplaySubject(obs)!;
+  const values = useSubscription(subscription)!;
   useDebugValue(values);
   return values;
 }
 
 export function useCreateContexts(): ProvidersViewModel.ProvidersContextValue {
-  const store = useMemo<ProvidersViewModel.ProvidersContextValue>(
-    () => new WeakMap<ProvidersViewModel.ContextIdentifier, any>(),
-    [],
-  );
-  useDebugValue(store);
-  return store;
+  const parentContexts = useContext(ProvidersContext);
+  const contexts: ProvidersViewModel.ProvidersContextValue = useMemo<ProvidersViewModel.ProvidersContextValue>(() => {
+    const store = new WeakMap<ProvidersViewModel.ContextIdentifier, any>();
+    return {
+      get: (id) => {
+        const toInject = store.get(id) || parentContexts.get(id);
+        if (!toInject) {
+          throw new Error(
+            `Identifier: ${id} don't have implementation provided`,
+          );
+        }
+        return toInject;
+      },
+      set: store.set.bind(store),
+    };
+  }, [parentContexts]);
+  useDebugValue(contexts);
+  return contexts;
 }
 
 export function useProvide<T>(
@@ -59,7 +80,9 @@ export function useProvide<T>(
     return box;
   }, []);
   useEffect(() => {
-    subject.next(value);
+    ReactDOM.unstable_batchedUpdates(() => {
+      subject.next(value);
+    });
   }, [value, subject]);
 }
 
@@ -70,7 +93,7 @@ export function useInject<T>(id: ProvidersViewModel.ContextIdentifier<T>): T {
   const subscription = useMemo<Subscription<T>>(
     () => ({
       subscribe: (cb) => {
-        const sub = box.subscribe(cb);
+        const sub = box.pipe(skip(1)).subscribe(cb);
         return () => sub.unsubscribe();
       },
       getCurrentValue: () => box.getValue(),
@@ -80,11 +103,11 @@ export function useInject<T>(id: ProvidersViewModel.ContextIdentifier<T>): T {
   return useSubscription(subscription);
 }
 
-export function useReplaySubject<T>(replayed: Subscribable<T>): T | undefined {
+export function useReplaySubject<T>(replayed: Observable<T>): T | undefined {
   const subscription = useMemo<Subscription<T>>(
     () => ({
       subscribe: (cb) => {
-        const sub = replayed.subscribe(cb);
+        const sub = replayed.pipe(skip(1)).subscribe(cb);
         return () => sub.unsubscribe();
       },
       getCurrentValue: () => {

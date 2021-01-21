@@ -16,15 +16,7 @@ export const Providers: React.FC<ProvidersProps> = ({ contexts, children }) => {
   const parentContexts = useContext(ProvidersContext);
   const currContext = useMemo<ProvidersViewModel.ProvidersContextValue>(() => {
     return {
-      get(id) {
-        const toInject = contextRef.current.get(id) || parentContexts.get(id);
-        if (!toInject) {
-          throw new Error(
-            `Identifier: ${id} don't have implementation provided`,
-          );
-        }
-        return toInject;
-      },
+      get: (id) => contexts.get(id),
       set() {
         // placeholder
       },

@@ -7,6 +7,7 @@ module.exports = {
   resolve: {
     mainFields: ["main"],
     extensions: [".js", ".jsx", ".ts", ".tsx"],
+    symlinks: false,
   },
   entry: path.resolve(__dirname, "./src/index.tsx"),
   module: {

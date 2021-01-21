@@ -1,47 +1,47 @@
 {
-  "name": "react-multi-provide",
-  "version": "1.1.5",
-  "description": "",
-  "directories": {
-    "lib": "lib",
-    "test": "__tests__"
-  },
-  "files": [
-    "lib",
-    "esm"
+  "private": true,
+  "workspaces": [
+    "packages/*"
   ],
-  "main": "lib/index.js",
-  "module": "esm/index.js",
-  "typings": "lib/index.d.ts",
-  "scripts": {
-    "watch": "tsc -w -p tsconfig.cjs.json",
-    "build": "rimraf -rf lib esm && tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json",
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "description": "",
+  "devDependencies": {
+    "html-webpack-plugin": "^4.5.1",
+    "lerna": "^3.22.1",
+    "rimraf": "*",
+    "typescript": "*",
+    "webpack": "^5.11.1",
+    "webpack-cli": "^4.3.1",
+    "webpack-dev-server": "^3.11.1"
   },
-  "author": "TieriaHyperion <totooriahyperion@icloud.com>",
-  "license": "MIT",
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org"
+  "scripts": {
+    "watch": "tsc -b -w ./packages",
+    "build": "npm run clean && npm run build:cjs && npm run build:esm",
+    "build:esm": "tsc -b ./packages/tsconfig.esm.json",
+    "build:cjs": "tsc -b ./packages/tsconfig.json",
+    "clean": "npm run clean:out && npm run clean:buildinfo",
+    "clean:out": "rimraf -rf packages/*/esm packages/*/lib",
+    "clean:buildinfo": "rimraf packages/*/tsconfig.tsbuildinfo packages/*/tsconfig.esm.tsbuildinfo",
+    "clean:node_modules": "rimraf -rf packages/*/node_modules",
+    "prerelease": "lerna version prerelease --conventional-prerelease",
+    "prepatch": "lerna version prepatch --conventional-prerelease",
+    "preminor": "lerna version preminor --conventional-prerelease",
+    "premajor": "lerna version premajor --conventional-prerelease",
+    "patch": "lerna version patch --conventional-graduate --changelog-preset angular",
+    "minor": "lerna version minor --conventional-graduate --changelog-preset angular",
+    "major": "lerna version major --conventional-graduate --changelog-preset angular",
+    "publish:git": "npm run build && lerna publish from-git",
+    "publish:package": "npm run build && lerna publish from-package",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/TotooriaHyperion/react-multi-provide.git"
+    "url": "git+https://github.com/TotooriaHyperion/react-multi-provide.git"
   },
-  "dependencies": {
-    "@types/lodash.isarray": "^4.0.6",
-    "@types/react": "*",
-    "@types/use-subscription": "*",
-    "lodash.isarray": "^4.0.0",
-    "rxjs": "^6.6.3",
-    "tslib": "^2.0.3",
-    "use-subscription": "*"
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TotooriaHyperion/react-multi-provide/issues"
   },
-  "peerDependencies": {
-    "react": "*"
-  },
-  "devDependencies": {
-    "react": "*",
-    "rimraf": "^3.0.2",
-    "typescript": "*"
-  }
+  "homepage": "https://github.com/TotooriaHyperion/react-multi-provide#readme",
+  "name": "react-multi-provide"
 }
