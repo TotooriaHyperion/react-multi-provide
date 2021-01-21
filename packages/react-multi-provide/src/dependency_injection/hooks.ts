@@ -11,14 +11,21 @@ export function useService<T extends [...ServiceIdentifier[]]>(
   ...ids: T
 ): {
   [K in keyof T]: T[K] extends ServiceIdentifier<infer P> ? P : never;
-} {
+};
+export function useService<T extends [...ServiceIdentifier[]]>(
+  contexts: ProvidersViewModel.ProvidersContextValue,
+  ...ids: T
+): {
+  [K in keyof T]: T[K] extends ServiceIdentifier<infer P> ? P : never;
+};
+export function useService(...ids: any): any {
   const serviceObs: ProvidersViewModel.SubscribableWithInitialValue<any>[] = useContexts(
     ...ids,
-  );
+  ) as any;
 
-  const getServices = useStableCallback(() =>
-    serviceObs.map((obs) => obs.getValue()),
-  );
+  const getServices = useStableCallback(() => {
+    return serviceObs.map((obs) => obs.getValue());
+  });
   const [services, setServices] = useState(getServices);
   useEffect(() => {
     const sub = combineLatest(serviceObs)
@@ -102,7 +109,9 @@ export function useProvideService<T, Args extends any[] = []>(
   useEffect(() => {
     const sub = combineLatest(
       [...depsMap.values()].map((spec) => contexts.get(spec.id)),
-    ).subscribe(reloadService);
+    )
+      .pipe(skip(1))
+      .subscribe(reloadService);
     return () => sub.unsubscribe();
   }, [depsMap]);
   // s 是响应式的服务实例

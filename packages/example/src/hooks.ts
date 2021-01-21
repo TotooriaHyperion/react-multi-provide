@@ -1,4 +1,4 @@
-import { useEffect, useDebugValue, useMemo, useRef } from "react";
+import { useEffect, useDebugValue, useRef } from "react";
 
 export interface ChangeSpec {
   key: string;
@@ -8,9 +8,7 @@ export interface ChangeSpec {
 
 export function useRenderCount(name: string) {
   const renderRef = useRef(0);
-  useMemo(() => {
-    renderRef.current++;
-  }, [{}]);
+  renderRef.current++;
   useDebugValue(renderRef.current);
   console.log(name, renderRef.current);
 }

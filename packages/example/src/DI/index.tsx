@@ -20,7 +20,9 @@ export const DependencyInjection = memo(function DependencyInjection() {
   useProvide(contexts, IC, ic);
   useRenderCount("DependencyInjection");
 
-  useChangeDetect({ ic, v }, "DependencyInjection");
+  const [ib] = useService(contexts, IB);
+
+  useChangeDetect({ ic, ib, v }, "DependencyInjection");
 
   return (
     <Providers contexts={contexts}>
@@ -28,6 +30,7 @@ export const DependencyInjection = memo(function DependencyInjection() {
       <Child1 />
       <Child2 />
       <Child3 />
+      <p>IB from same level: {ib.b}</p>
       <button onClick={() => setV((o) => o + 1)}>+</button>
       <button onClick={() => setV((o) => o - 1)}>-</button>
     </Providers>
@@ -49,9 +52,10 @@ const Child = memo(function Child() {
 });
 
 const Child1 = memo(function Child1() {
-  const [ia] = useService(IA);
+  const services = useService(IA);
+  const [ia] = services;
   useRenderCount("Child1");
-  useChangeDetect({ ia }, "Child1");
+  useChangeDetect({ ia, services }, "Child1");
   return <p>ia: {ia.a}</p>;
 });
 const Child2 = memo(function Child2() {

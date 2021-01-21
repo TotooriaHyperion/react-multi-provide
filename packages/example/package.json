@@ -11,13 +11,16 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@babel/preset-react": "*",
     "@types/react-dom": "^17.0.0",
+    "babel-loader": "*",
     "html-webpack-plugin": "^4.5.1",
     "react-dom": "^17.0.1",
     "react-multi-provide": "^2.0.1",
     "ts-loader": "^8.0.14",
     "webpack": "^5.16.0",
     "webpack-cli": "^4.4.0",
-    "webpack-dev-server": "^3.11.2"
+    "webpack-dev-server": "^3.11.2",
+    "@welldone-software/why-did-you-render": "*"
   }
 }
