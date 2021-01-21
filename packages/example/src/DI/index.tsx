@@ -1,6 +1,5 @@
 import React, { memo, useState, useMemo } from "react";
 import {
-  useService,
   useContexts,
   useCreateContexts,
   useProvideService,
@@ -20,7 +19,7 @@ export const DependencyInjection = memo(function DependencyInjection() {
   useProvide(contexts, IC, ic);
   useRenderCount("DependencyInjection");
 
-  const [ib] = useService(contexts, IB);
+  const [ib] = useContexts(contexts, IB);
 
   useChangeDetect({ ic, ib, v }, "DependencyInjection");
 
@@ -38,7 +37,7 @@ export const DependencyInjection = memo(function DependencyInjection() {
 });
 
 const Child = memo(function Child() {
-  const [ia, ib] = useService(IA, IB);
+  const [ia, ib] = useContexts(IA, IB);
   const [ic] = useContexts([IC]);
   useRenderCount("Child");
   useChangeDetect({ ia, ib, ic }, "Child");
@@ -52,14 +51,14 @@ const Child = memo(function Child() {
 });
 
 const Child1 = memo(function Child1() {
-  const services = useService(IA);
+  const services = useContexts(IA);
   const [ia] = services;
   useRenderCount("Child1");
   useChangeDetect({ ia, services }, "Child1");
   return <p>ia: {ia.a}</p>;
 });
 const Child2 = memo(function Child2() {
-  const [ib] = useService(IB);
+  const [ib] = useContexts(IB);
   useRenderCount("Child2");
   useChangeDetect({ ib }, "Child2");
   return <p>ib: {ib.b}</p>;

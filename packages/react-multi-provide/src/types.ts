@@ -28,3 +28,12 @@ export module ProvidersViewModel {
     (params: P): I extends ContextIdentifier<infer C> ? C : never;
   }
 }
+
+export const ObservableServiceSymbol = Symbol.for(
+  "react-multi-provide/obs_service",
+);
+export function isObservableService<T>(
+  v: any,
+): v is ProvidersViewModel.SubscribableWithInitialValue<T> {
+  return v[ObservableServiceSymbol];
+}

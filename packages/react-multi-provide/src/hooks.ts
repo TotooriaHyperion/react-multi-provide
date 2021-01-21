@@ -1,11 +1,16 @@
-import { useContext, useDebugValue, useEffect, useMemo } from "react";
+import { useContext, useDebugValue, useEffect, useMemo, useRef } from "react";
 import ReactDOM from "react-dom";
-import { BehaviorSubject, combineLatest, Observable } from "rxjs";
+import { Subject, merge, Observable } from "rxjs";
 import { skip, tap } from "rxjs/operators";
 import { Subscription, useSubscription } from "use-subscription";
 import isArray from "lodash.isarray";
 import { ProvidersContext } from "./context";
-import { ProvidersViewModel } from "./types";
+import {
+  isObservableService,
+  ObservableServiceSymbol,
+  ProvidersViewModel,
+} from "./types";
+import { useStableCallback } from "./dependency_injection";
 
 type ID<T> = ProvidersViewModel.ContextIdentifier<T>;
 
@@ -54,9 +59,8 @@ export function useContexts(...ids: any): any {
     let value = getValue();
     return {
       subscribe: (cb) => {
-        const sub = combineLatest(obs)
+        const sub = merge(...obs)
           .pipe(
-            skip(1),
             tap(() => {
               value = getValue();
             }),
@@ -102,17 +106,34 @@ export function useCreateContexts(): ProvidersViewModel.ProvidersContextValue {
 export function useProvide<T>(
   contexts: ProvidersViewModel.ProvidersContextValue,
   id: ProvidersViewModel.ContextIdentifier<T>,
-  value: T,
+  value: T | ProvidersViewModel.SubscribableWithInitialValue<T>,
 ) {
+  const prevValueRef = useRef(value);
+  const getCurrentValue = useStableCallback(() => value);
   const subject = useMemo(() => {
-    const box = new BehaviorSubject<T>(value);
+    if (isObservableService<T>(value)) {
+      // 如果已经是响应式 service 则直接设置，返回 null 指不需要通过 hooks-effect 触发更新
+      contexts.set(id, value);
+      return null;
+    }
+    // 不是响应式 service 说明是通过 hooks 触发的，需要构造一个 Subject
+    const box = Object.assign(new Subject<T>(), {
+      getValue: getCurrentValue,
+    });
     contexts.set(id, box);
-    return box;
+    return Object.assign(box, {
+      [ObservableServiceSymbol]: true,
+    });
   }, []);
   useEffect(() => {
-    if (subject.value !== value) {
+    if (isObservableService(value)) {
+      // 如果已经是响应式 service 则无需手动触发更新
+      return;
+    }
+    if (prevValueRef.current !== value) {
+      // 如果非响应式 value 改变，则更新
       ReactDOM.unstable_batchedUpdates(() => {
-        subject.next(value);
+        subject?.next();
       });
     }
   }, [value, subject]);
@@ -125,7 +146,7 @@ export function useInject<T>(id: ProvidersViewModel.ContextIdentifier<T>): T {
   const subscription = useMemo<Subscription<T>>(
     () => ({
       subscribe: (cb) => {
-        const sub = box.pipe(skip(1)).subscribe(cb);
+        const sub = box.subscribe(cb);
         return () => sub.unsubscribe();
       },
       getCurrentValue: () => box.getValue(),

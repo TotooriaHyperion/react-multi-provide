@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { combineLatest, Subject } from "rxjs";
-import { skip } from "rxjs/operators";
+import { useCallback, useEffect, useMemo, useRef, useDebugValue } from "react";
+import ReactDOM from "react-dom";
+import { merge, Subject } from "rxjs";
 import { useContexts, useProvide } from "../hooks";
-import { ProvidersViewModel } from "../types";
+import { ProvidersViewModel, ObservableServiceSymbol } from "../types";
 import { ServiceIdentifier } from "./types";
 import { ensureDepsMap } from "./inject";
-import { reactBatch } from "../performance";
 
 export function useService<T extends [...ServiceIdentifier[]]>(
   ...ids: T
@@ -19,27 +18,9 @@ export function useService<T extends [...ServiceIdentifier[]]>(
   [K in keyof T]: T[K] extends ServiceIdentifier<infer P> ? P : never;
 };
 export function useService(...ids: any): any {
-  const serviceObs: ProvidersViewModel.SubscribableWithInitialValue<any>[] = useContexts(
-    ...ids,
-  ) as any;
-
-  const getServices = useStableCallback(() => {
-    return serviceObs.map((obs) => obs.getValue());
-  });
-  const [services, setServices] = useState(getServices);
-  useEffect(() => {
-    const sub = combineLatest(serviceObs)
-      .pipe(skip(1))
-      .subscribe(() => {
-        const s = getServices();
-        setServices(s);
-      });
-    return () => {
-      sub.unsubscribe();
-    };
-  }, serviceObs);
-
-  return services as any;
+  const services = useContexts(...ids);
+  useDebugValue(services);
+  return services;
 }
 
 type AnyFn = (...args: any[]) => any;
@@ -82,6 +63,7 @@ export function useProvideService<T, Args extends any[] = []>(
   const resolveService = useStableCallback(() => {
     // 如果 dirty 说明依赖改变了，需要重新生成服务实例
     if (dirtyRef.current) {
+      // console.log("resolve service", id.toString());
       const toInject = getDeps();
       const inst = new ctr(...deps);
       toInject.forEach((v) => {
@@ -95,32 +77,47 @@ export function useProvideService<T, Args extends any[] = []>(
   // 重新构造实例
   const reloadService = useStableCallback(() => {
     dirtyRef.current = true;
-    subject.next();
+    // console.log("reload service", id.toString());
+    ReactDOM.unstable_batchedUpdates(() => {
+      subject.next();
+    });
   });
-  const subject = useMemo(() => new Subject(), []);
+  const subject = useMemo(() => new Subject<T>(), []);
+
   // 如果服务（构造函数）改变，或参数改变，则需要重新构造实例
   // 比如从 taskId = 1 切换至 taskId = 2 则对 taskId = 2 应该有一个新的实例
   // 因为两者状态实际不共享，需要跨越两个 task 的状态不是 task 的状态，而应该被提升至上级状态
   // TODO: 是否应该使用构造函数参数？或者直接将 taskId 认为是上层 taskService 的一个 property ？
   // TODO: 实例是否支持 keepAlive ？如果要支持，那么 cacheKey 怎么定义？是否要支持 LRU 过期？
-  useEffect(reloadService, [ctr, ...deps]);
+  useUpdated(reloadService, [ctr, ...deps]);
+
   // 如果服务的依赖改变，则重载。
   // depsMap -> reactivities -> reloadService
   useEffect(() => {
-    const sub = combineLatest(
-      [...depsMap.values()].map((spec) => contexts.get(spec.id)),
-    )
-      .pipe(skip(1))
-      .subscribe(reloadService);
+    const sub = merge(
+      ...[...depsMap.values()].map((spec) => contexts.get(spec.id)),
+    ).subscribe(reloadService);
     return () => sub.unsubscribe();
   }, [depsMap]);
   // s 是响应式的服务实例
   // getValue 是 resolveService
   // subject 代表实例重载的 reactivity
   const s = useMemo(() => {
-    return Object.assign(reactBatch(subject), {
+    return Object.assign(subject, {
       getValue: resolveService,
+      [ObservableServiceSymbol]: true,
     });
   }, [resolveService, subject]);
   useProvide(contexts, id, s);
+}
+
+function useUpdated(handler: () => void, deps?: any[]) {
+  const firstEffectRef = useRef(true);
+  useEffect(() => {
+    if (firstEffectRef.current) {
+      firstEffectRef.current = false;
+      return;
+    }
+    handler();
+  }, deps);
 }
