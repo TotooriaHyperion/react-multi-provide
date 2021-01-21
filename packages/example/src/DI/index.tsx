@@ -7,7 +7,7 @@ import {
   Providers,
 } from "react-multi-provide";
 import { useChangeDetect, useRenderCount } from "../hooks";
-import { IA, IAImpl, IB, IBImpl, IC } from "./services";
+import { IA, IAImpl, IB, IBImpl, IC, ID, IDImpl } from "./services";
 
 export const DependencyInjection = memo(function DependencyInjection() {
   const contexts = useCreateContexts();
@@ -16,6 +16,7 @@ export const DependencyInjection = memo(function DependencyInjection() {
   useProvideService(contexts, IA, IAImpl, []);
   // 带参服务，参数不同实例不同，避免使用
   useProvideService(contexts, IB, IBImpl, [v]);
+  useProvideService(contexts, ID, IDImpl, []);
   useProvide(contexts, IC, ic);
   useRenderCount("DependencyInjection");
 
@@ -29,6 +30,7 @@ export const DependencyInjection = memo(function DependencyInjection() {
       <Child1 />
       <Child2 />
       <Child3 />
+      <Child4 />
       <p>IB from same level: {ib.b}</p>
       <button onClick={() => setV((o) => o + 1)}>+</button>
       <button onClick={() => setV((o) => o - 1)}>-</button>
@@ -37,14 +39,13 @@ export const DependencyInjection = memo(function DependencyInjection() {
 });
 
 const Child = memo(function Child() {
-  const [ia, ib] = useContexts(IA, IB);
-  const [ic] = useContexts([IC]);
+  const [ia, ib, ic, id] = useContexts(IA, IB, IC, ID);
   useRenderCount("Child");
-  useChangeDetect({ ia, ib, ic }, "Child");
+  useChangeDetect({ ia, ib, ic, id }, "Child");
   return (
     <>
       <p>
-        ia, ib, ic: {ia.a}, {ib.b}, {ic.c}
+        ia, ib, ic, id: {ia.a}, {ib.b}, {ic.c}, {id.d}
       </p>
     </>
   );
@@ -68,4 +69,10 @@ const Child3 = memo(function Child3() {
   useRenderCount("Child3");
   useChangeDetect({ ic }, "Child3");
   return <p>ic: {ic.c}</p>;
+});
+const Child4 = memo(function Child3() {
+  const [id] = useContexts([ID]);
+  useRenderCount("Child4");
+  useChangeDetect({ id }, "Child4");
+  return <p>ic: {id.d}</p>;
 });

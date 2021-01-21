@@ -52,37 +52,42 @@ export function useProvideService<T, Args extends any[] = []>(
     return ensureDepsMap(ctr);
   }, [ctr]);
   // depsMap -> pair[propertyKey, serviceIdentifier] -> pair[propertyKey, service]
-  const getDeps = useStableCallback(() => {
-    return [...depsMap.values()].map((spec) => ({
-      key: spec.key,
-      value: contexts.get(spec.id).getValue(),
-    }));
-  });
   const dirtyRef = useRef(true);
   const serviceRef = useRef<T>(null as any);
   const resolveService = useStableCallback(() => {
     // 如果 dirty 说明依赖改变了，需要重新生成服务实例
     if (dirtyRef.current) {
+      dirtyRef.current = false;
       // console.log("resolve service", id.toString());
-      const toInject = getDeps();
       const inst = new ctr(...deps);
-      toInject.forEach((v) => {
-        (inst as any)[v.key] = v.value;
+      [...depsMap.values()].forEach((spec) => {
+        Object.defineProperty(inst, spec.key, {
+          get() {
+            // 使用 懒加载 处理循环依赖的注入
+            return contexts.get(spec.id).getValue();
+          },
+        });
       });
       serviceRef.current = inst;
-      dirtyRef.current = false;
     }
     return serviceRef.current;
   });
   // 重新构造实例
-  const reloadService = useStableCallback(() => {
-    dirtyRef.current = true;
-    // console.log("reload service", id.toString());
-    ReactDOM.unstable_batchedUpdates(() => {
-      subject.next();
-    });
-  });
-  const subject = useMemo(() => new Subject<T>(), []);
+  const reloadService = useStableCallback(
+    (trigger: Set<ServiceIdentifier> = new Set()) => {
+      if (trigger.has(id)) {
+        // 循环依赖触发的循环重载，如果是自己触发的，则撤销。
+        return;
+      }
+      trigger.add(id);
+      dirtyRef.current = true;
+      // console.log("reload service", id.toString());
+      ReactDOM.unstable_batchedUpdates(() => {
+        subject.next(trigger);
+      });
+    },
+  );
+  const subject = useMemo(() => new Subject(), []);
 
   // 如果服务（构造函数）改变，或参数改变，则需要重新构造实例
   // 比如从 taskId = 1 切换至 taskId = 2 则对 taskId = 2 应该有一个新的实例
@@ -96,9 +101,13 @@ export function useProvideService<T, Args extends any[] = []>(
   useEffect(() => {
     const sub = merge(
       ...[...depsMap.values()].map((spec) => contexts.get(spec.id)),
-    ).subscribe(reloadService);
+    ).subscribe((trigger) => {
+      // console.log({ v });
+      reloadService(trigger);
+    });
     return () => sub.unsubscribe();
   }, [depsMap]);
+
   // s 是响应式的服务实例
   // getValue 是 resolveService
   // subject 代表实例重载的 reactivity

@@ -117,7 +117,7 @@ export function useProvide<T>(
       return null;
     }
     // 不是响应式 service 说明是通过 hooks 触发的，需要构造一个 Subject
-    const box = Object.assign(new Subject<T>(), {
+    const box = Object.assign(new Subject(), {
       getValue: getCurrentValue,
     });
     contexts.set(id, box);
@@ -131,9 +131,10 @@ export function useProvide<T>(
       return;
     }
     if (prevValueRef.current !== value) {
+      prevValueRef.current = value;
       // 如果非响应式 value 改变，则更新
       ReactDOM.unstable_batchedUpdates(() => {
-        subject?.next();
+        subject?.next(new Set([id]));
       });
     }
   }, [value, subject]);
