@@ -15,6 +15,15 @@
   },
   "scripts": {
     "watch": "tsc -b -w ./packages",
+    "prerelease": "lerna version prerelease --conventional-prerelease",
+    "prepatch": "lerna version prepatch --conventional-prerelease",
+    "preminor": "lerna version preminor --conventional-prerelease",
+    "premajor": "lerna version premajor --conventional-prerelease",
+    "patch": "lerna version patch --conventional-graduate --changelog-preset angular",
+    "minor": "lerna version minor --conventional-graduate --changelog-preset angular",
+    "major": "lerna version major --conventional-graduate --changelog-preset angular",
+    "publish:git": "npm run build && lerna publish from-git",
+    "publish:package": "npm run build && lerna publish from-package",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
