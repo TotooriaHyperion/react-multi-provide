@@ -5,6 +5,8 @@
 - fractal between providers
 - use WeakMap to store the dependencies
 - use Object wrapped symbol to achieve better typescript support, dependency injection & debug experience
+- v2.x
+  - support [dependency injection](#dependency-injection)
 
 ## Example
 
@@ -49,6 +51,9 @@ export const Inner2: React.FC = () => {
   );
 };
 ```
+
+## Dependency Injection
+see [Example](./packages/react-multi-provide/src/dependency_injection/Readme.md)
 
 ## Notice
 
