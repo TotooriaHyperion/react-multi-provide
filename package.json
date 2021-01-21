@@ -5,13 +5,9 @@
   ],
   "description": "",
   "devDependencies": {
-    "html-webpack-plugin": "^4.5.1",
     "lerna": "^3.22.1",
     "rimraf": "*",
-    "typescript": "*",
-    "webpack": "^5.11.1",
-    "webpack-cli": "^4.3.1",
-    "webpack-dev-server": "^3.11.1"
+    "typescript": "*"
   },
   "scripts": {
     "watch": "tsc -b -w ./packages",
