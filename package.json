@@ -15,6 +15,13 @@
   },
   "scripts": {
     "watch": "tsc -b -w ./packages",
+    "build": "npm run clean && npm run build:cjs && npm run build:esm",
+    "build:esm": "tsc -b ./packages/tsconfig.esm.json",
+    "build:cjs": "tsc -b ./packages/tsconfig.json",
+    "clean": "npm run clean:out && npm run clean:buildinfo",
+    "clean:out": "rimraf -rf packages/*/esm packages/*/lib",
+    "clean:buildinfo": "rimraf packages/*/tsconfig.tsbuildinfo packages/*/tsconfig.esm.tsbuildinfo",
+    "clean:node_modules": "rimraf -rf packages/*/node_modules",
     "prerelease": "lerna version prerelease --conventional-prerelease",
     "prepatch": "lerna version prepatch --conventional-prerelease",
     "preminor": "lerna version preminor --conventional-prerelease",
