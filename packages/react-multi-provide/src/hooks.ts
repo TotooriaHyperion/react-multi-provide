@@ -1,4 +1,4 @@
-import { useContext, useDebugValue, useEffect, useMemo, useRef } from "react";
+import { useContext, useDebugValue, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import { Subject, merge, Observable } from "rxjs";
 import { skip, tap } from "rxjs/operators";
@@ -53,7 +53,7 @@ export function useContexts(...ids: any): any {
   if (isArray(first)) {
     allIds = first;
   }
-  const subscription = useMemo<Subscription<any[]>>(() => {
+  const subscription = useInit<Subscription<any[]>>(() => {
     const obs = allIds.map((id) => contexts.get(id));
     const getValue = () => obs.map((item) => item.getValue());
     let value = getValue();
@@ -78,12 +78,61 @@ export function useContexts(...ids: any): any {
   return values;
 }
 
+function isDepsChanged(a: any[] = [], b: any[] = []): boolean {
+  if (!a || !b) {
+    return true;
+  }
+  if (a.length !== b.length) {
+    return true;
+  }
+  if (a.length === 0 && b.length === 0) {
+    return false;
+  }
+  let [left, right] = [a, b];
+  if (left.length < right.length) {
+    [left, right] = [right, left];
+  }
+  return left.some((item, idx) => item !== right[idx]);
+}
+
+export function useInit<T>(factory: () => T, deps: any[] = []): T {
+  const prevDepsRef = useRef<any[]>(null as any);
+  const valueRef = useRef<T>(null as any);
+  const depsChanged =
+    prevDepsRef.current === null || isDepsChanged(prevDepsRef.current, deps);
+  if (depsChanged) {
+    valueRef.current = factory();
+  }
+  prevDepsRef.current = deps;
+  return valueRef.current;
+}
+
+export function useUpdated(handler: () => void, deps?: any[]) {
+  const changedMark = useInit(() => ({}), deps);
+  const firstEffectRef = useRef(true);
+  useEffect(() => {
+    if (firstEffectRef.current) {
+      firstEffectRef.current = false;
+      return;
+    }
+    handler();
+  }, [changedMark]);
+}
+
 export const ContextStoreSymbol = Symbol.for(
   "react-multi-provide/context-store",
 );
 export function useCreateContexts(): ProvidersViewModel.ProvidersContextValue {
+  // don't use useMemo to create contexts
+  // because react-refresh will abandon useMemo result and create a new contexts
+  // react maybe abandon useMemo result in some cases in the future too
+  // see https://reactnative.dev/docs/fast-refresh#how-it-works
+  // see https://reactjs.org/docs/hooks-reference.html#usememo
+  // You may rely on useMemo as a performance optimization, not as a semantic guarantee.
+  // In the future, React may choose to “forget” some previously memoized values and recalculate them on next render
+  // see https://www.youtube.com/watch?t=484&v=Mjrfb1r3XEM&feature=youtu.be
   const parentContexts = useContext(ProvidersContext);
-  const contexts: ProvidersViewModel.ProvidersContextValue = useMemo<ProvidersViewModel.ProvidersContextValue>(() => {
+  const contexts = useInit<ProvidersViewModel.ProvidersContextValue>(() => {
     const store = new WeakMap<ProvidersViewModel.ContextIdentifier, any>();
     return {
       get: (id) => {
@@ -110,7 +159,7 @@ export function useProvide<T>(
 ) {
   const prevValueRef = useRef(value);
   const getCurrentValue = useStableCallback(() => value);
-  const subject = useMemo(() => {
+  const subject = useInit(() => {
     if (isObservableService<T>(value)) {
       // 如果已经是响应式 service 则直接设置，返回 null 指不需要通过 hooks-effect 触发更新
       contexts.set(id, value);
@@ -144,7 +193,7 @@ export function useInject<T>(id: ProvidersViewModel.ContextIdentifier<T>): T {
   const contexts = useContext(ProvidersContext);
   const box = contexts.get(id);
   useDebugValue(box, (v) => v.getValue());
-  const subscription = useMemo<Subscription<T>>(
+  const subscription = useInit<Subscription<T>>(
     () => ({
       subscribe: (cb) => {
         const sub = box.subscribe(cb);
@@ -158,7 +207,7 @@ export function useInject<T>(id: ProvidersViewModel.ContextIdentifier<T>): T {
 }
 
 export function useReplaySubject<T>(replayed: Observable<T>): T | undefined {
-  const subscription = useMemo<Subscription<T>>(
+  const subscription = useInit<Subscription<T>>(
     () => ({
       subscribe: (cb) => {
         const sub = replayed.pipe(skip(1)).subscribe(cb);

@@ -1,10 +1,11 @@
-import React, { memo, useState, useMemo } from "react";
+import React, { memo, useState, useEffect } from "react";
 import {
   useContexts,
   useCreateContexts,
   useProvideService,
   useProvide,
   Providers,
+  useInit,
 } from "react-multi-provide";
 import { useChangeDetect, useRenderCount } from "../hooks";
 import { IA, IAImpl, IB, IBImpl, IC, ID, IDImpl } from "./services";
@@ -12,17 +13,22 @@ import { IA, IAImpl, IB, IBImpl, IC, ID, IDImpl } from "./services";
 export const DependencyInjection = memo(function DependencyInjection() {
   const contexts = useCreateContexts();
   const [v, setV] = useState(0);
-  const ic = useMemo<IC>(() => ({ c: v }), [v]);
+  const ic = useInit<IC>(() => ({ c: v }), [v]);
   useProvideService(contexts, IA, IAImpl, []);
   // 带参服务，参数不同实例不同，避免使用
   useProvideService(contexts, IB, IBImpl, [v]);
   useProvideService(contexts, ID, IDImpl, []);
   useProvide(contexts, IC, ic);
   useRenderCount("DependencyInjection");
+  // console.log(123);
 
   const [ib] = useContexts(contexts, IB);
 
   useChangeDetect({ ic, ib, v }, "DependencyInjection");
+
+  useEffect(() => {
+    console.log("test react-refresh");
+  }, []);
 
   return (
     <Providers contexts={contexts}>

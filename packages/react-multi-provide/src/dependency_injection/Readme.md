@@ -53,12 +53,13 @@ export class IDImpl implements ID {
 index.tsx
 
 ```typescript
-import React, { memo, useState, useMemo } from "react";
+import React, { memo, useState } from "react";
 import {
   useContexts,
   useCreateContexts,
   useProvideService,
   useProvide,
+  useInit,
   Providers,
 } from "react-multi-provide";
 import { useChangeDetect, useRenderCount } from "../hooks";
@@ -67,7 +68,7 @@ import { IA, IAImpl, IB, IBImpl, IC, ID, IDImpl } from "./services";
 export const DependencyInjection = memo(function DependencyInjection() {
   const contexts = useCreateContexts();
   const [v, setV] = useState(0);
-  const ic = useMemo<IC>(() => ({ c: v }), [v]);
+  const ic = useInit<IC>(() => ({ c: v }), [v]);
   useProvideService(contexts, IA, IAImpl, []);
   // 带参服务，参数不同实例不同，避免使用
   useProvideService(contexts, IB, IBImpl, [v]);

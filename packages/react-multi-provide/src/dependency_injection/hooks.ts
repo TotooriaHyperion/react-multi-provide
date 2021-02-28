@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useDebugValue } from "react";
+import { useCallback, useEffect, useRef, useDebugValue } from "react";
 import ReactDOM from "react-dom";
 import { merge, Subject } from "rxjs";
-import { useContexts, useProvide } from "../hooks";
+import { useContexts, useInit, useProvide, useUpdated } from "../hooks";
 import { ProvidersViewModel, ObservableServiceSymbol } from "../types";
 import { ServiceIdentifier } from "./types";
 import { ensureDepsMap } from "./inject";
@@ -48,7 +48,7 @@ export function useProvideService<T, Args extends any[] = []>(
   deps: Args,
 ) {
   // 构造函数 -> depsMap: Map<Key, InjectSpec>
-  const depsMap = useMemo(() => {
+  const depsMap = useInit(() => {
     return ensureDepsMap(ctr);
   }, [ctr]);
   // depsMap -> pair[propertyKey, serviceIdentifier] -> pair[propertyKey, service]
@@ -87,7 +87,7 @@ export function useProvideService<T, Args extends any[] = []>(
       });
     },
   );
-  const subject = useMemo(() => new Subject(), []);
+  const subject = useInit(() => new Subject(), []);
 
   // 如果服务（构造函数）改变，或参数改变，则需要重新构造实例
   // 比如从 taskId = 1 切换至 taskId = 2 则对 taskId = 2 应该有一个新的实例
@@ -111,22 +111,11 @@ export function useProvideService<T, Args extends any[] = []>(
   // s 是响应式的服务实例
   // getValue 是 resolveService
   // subject 代表实例重载的 reactivity
-  const s = useMemo(() => {
+  const s = useInit(() => {
     return Object.assign(subject, {
       getValue: resolveService,
       [ObservableServiceSymbol]: true,
     });
   }, [resolveService, subject]);
   useProvide(contexts, id, s);
-}
-
-function useUpdated(handler: () => void, deps?: any[]) {
-  const firstEffectRef = useRef(true);
-  useEffect(() => {
-    if (firstEffectRef.current) {
-      firstEffectRef.current = false;
-      return;
-    }
-    handler();
-  }, deps);
 }

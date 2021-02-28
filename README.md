@@ -13,13 +13,13 @@
 Outer.tsx
 
 ```typescript
-import React, { useMemo } from "react";
-import { Providers, useCreateContexts, useProvide } from "../..";
+import React from "react";
+import { Providers, useCreateContexts, useProvide, useInit } from "../..";
 import { createService, ServiceA } from "./service";
 
 export const Outer: React.FC = ({ children }) => {
   const contexts = useCreateContexts();
-  const service = useMemo(createService, []);
+  const service = useInit(createService, []);
   useProvide(contexts, ServiceA.id, service);
   return <Providers contexts={contexts}>{children}</Providers>;
 };
@@ -53,6 +53,7 @@ export const Inner2: React.FC = () => {
 ```
 
 ## Dependency Injection
+
 see [Example](./packages/react-multi-provide/src/dependency_injection/Readme.md)
 
 ## Notice

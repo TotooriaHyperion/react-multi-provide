@@ -1,5 +1,6 @@
-import React, { useContext, useMemo, useRef } from "react";
+import React, { useContext, useRef } from "react";
 import { ProvidersContext } from "./context";
+import { useInit } from "./hooks";
 import { ProvidersViewModel } from "./types";
 
 export interface ProvidersProps {
@@ -14,7 +15,7 @@ export const Providers: React.FC<ProvidersProps> = ({ contexts, children }) => {
     );
   }
   const parentContexts = useContext(ProvidersContext);
-  const currContext = useMemo<ProvidersViewModel.ProvidersContextValue>(() => {
+  const currContext = useInit<ProvidersViewModel.ProvidersContextValue>(() => {
     return {
       get: (id) => contexts.get(id),
       set() {
