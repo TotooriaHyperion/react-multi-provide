@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useDebugValue } from "react";
+import { useCallback, useEffect, useRef, useDebugValue, useMemo } from "react";
 import ReactDOM from "react-dom";
 import { merge, Subject } from "rxjs";
 import { useContexts, useInit, useProvide, useUpdated } from "../hooks";
 import { ProvidersViewModel, ObservableServiceSymbol } from "../types";
 import { ServiceIdentifier } from "./types";
 import { ensureDepsMap } from "./inject";
+import { useSubscription } from "use-subscription";
 
 export function useService<T extends [...ServiceIdentifier[]]>(
   ...ids: T
@@ -87,7 +88,7 @@ export function useProvideService<T, Args extends any[] = []>(
       });
     },
   );
-  const subject = useInit(() => new Subject(), []);
+  const subject = useInit(() => new Subject<Set<ServiceIdentifier>>(), []);
 
   // 如果服务（构造函数）改变，或参数改变，则需要重新构造实例
   // 比如从 taskId = 1 切换至 taskId = 2 则对 taskId = 2 应该有一个新的实例
@@ -118,4 +119,68 @@ export function useProvideService<T, Args extends any[] = []>(
     });
   }, [resolveService, subject]);
   useProvide(contexts, id, s);
+}
+
+export function useConstructor<T, Args extends any[] = []>(
+  contexts: ProvidersViewModel.ProvidersContextValue,
+  ctr: new (...args: Args) => T,
+  deps: Args,
+): T {
+  // 构造函数 -> depsMap: Map<Key, InjectSpec>
+  const depsMap = useInit(() => {
+    return ensureDepsMap(ctr);
+  }, [ctr]);
+  // depsMap -> pair[propertyKey, serviceIdentifier] -> pair[propertyKey, service]
+  const dirtyRef = useRef(true);
+  const serviceRef = useRef<T>(null as any);
+  const resolveService = useStableCallback(() => {
+    // 如果 dirty 说明依赖改变了，需要重新生成服务实例
+    if (dirtyRef.current) {
+      dirtyRef.current = false;
+      // console.log("resolve service", id.toString());
+      const inst = new ctr(...deps);
+      [...depsMap.values()].forEach((spec) => {
+        Object.defineProperty(inst, spec.key, {
+          get() {
+            // 使用 懒加载 处理循环依赖的注入
+            return contexts.get(spec.id).getValue();
+          },
+        });
+      });
+      serviceRef.current = inst;
+    }
+    return serviceRef.current;
+  });
+  // 重新构造实例
+  const reloadService = useStableCallback(() => {
+    dirtyRef.current = true;
+    subject.next();
+  });
+  const subject = useInit(() => new Subject(), []);
+
+  // 如果服务（构造函数）改变，或参数改变，则需要重新构造实例
+  useUpdated(reloadService, [ctr, ...deps]);
+
+  // 如果服务的依赖改变，则重载。
+  // depsMap -> reactivities -> reloadService
+  useEffect(() => {
+    const sub = merge(
+      ...[...depsMap.values()].map((spec) => contexts.get(spec.id)),
+    ).subscribe(() => {
+      reloadService();
+    });
+    return () => sub.unsubscribe();
+  }, [depsMap]);
+  return useSubscription(
+    useMemo(
+      () => ({
+        subscribe: (cb) => {
+          const sub = subject.subscribe(cb);
+          return () => sub.unsubscribe();
+        },
+        getCurrentValue: resolveService,
+      }),
+      [subject, resolveService],
+    ),
+  );
 }

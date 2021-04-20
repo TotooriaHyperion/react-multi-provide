@@ -108,15 +108,20 @@ export function useInit<T>(factory: () => T, deps: any[] = []): T {
 }
 
 export function useUpdated(handler: () => void, deps?: any[]) {
-  const changedMark = useInit(() => ({}), deps);
   const firstEffectRef = useRef(true);
+  const changedMark = useInit(() => ({}), deps);
+  const prevMarkRef = useRef<any>();
+  const depsChanged = prevMarkRef.current !== changedMark;
+  prevMarkRef.current = changedMark;
   useEffect(() => {
     if (firstEffectRef.current) {
       firstEffectRef.current = false;
       return;
     }
-    handler();
-  }, [changedMark]);
+    if (depsChanged) {
+      handler();
+    }
+  });
 }
 
 export const ContextStoreSymbol = Symbol.for(

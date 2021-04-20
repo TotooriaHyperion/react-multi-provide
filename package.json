@@ -5,8 +5,11 @@
   ],
   "description": "",
   "devDependencies": {
+    "@types/jest": "*",
     "lerna": "^3.22.1",
+    "jest": "*",
     "rimraf": "*",
+    "ts-jest": "*",
     "typescript": "*"
   },
   "scripts": {
