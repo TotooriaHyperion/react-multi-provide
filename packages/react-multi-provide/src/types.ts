@@ -35,5 +35,5 @@ export const ObservableServiceSymbol = Symbol.for(
 export function isObservableService<T>(
   v: any,
 ): v is ProvidersViewModel.SubscribableWithInitialValue<T> {
-  return v[ObservableServiceSymbol];
+  return !!v?.[ObservableServiceSymbol];
 }
