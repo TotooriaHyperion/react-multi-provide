@@ -1,6 +1,6 @@
 {
   "name": "react-multi-provide",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "",
   "directories": {
     "lib": "lib",
@@ -40,7 +40,7 @@
     "react": "*"
   },
   "devDependencies": {
-    "react": "*",
-    "@testing-library/react-hooks": "*"
+    "@testing-library/react-hooks": "*",
+    "react": "*"
   }
 }
