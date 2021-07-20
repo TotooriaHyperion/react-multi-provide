@@ -23,7 +23,7 @@ export function useContexts<T1, T2, T3, T4>(
   sources: [ID<T1>, ID<T2>, ID<T3>, ID<T4>],
 ): [T1, T2, T3, T4];
 export function useContexts<
-  T extends [...ProvidersViewModel.ContextIdentifier[]]
+  T extends [...ProvidersViewModel.ContextIdentifier[]],
 >(
   ...ids: T
 ): {
@@ -32,7 +32,7 @@ export function useContexts<
     : never;
 };
 export function useContexts<
-  T extends [...ProvidersViewModel.ContextIdentifier[]]
+  T extends [...ProvidersViewModel.ContextIdentifier[]],
 >(
   contexts: ProvidersViewModel.ProvidersContextValue,
   ...ids: T
@@ -143,9 +143,7 @@ export function useCreateContexts(): ProvidersViewModel.ProvidersContextValue {
       get: (id) => {
         const toInject = store.get(id) || parentContexts.get(id);
         if (!toInject) {
-          throw new Error(
-            `Identifier: ${id} don't have implementation provided`,
-          );
+          console.warn(`Identifier: ${id} don't have implementation provided`);
         }
         return toInject;
       },
