@@ -138,7 +138,7 @@ export function useCreateContexts(): ProvidersViewModel.ProvidersContextValue {
   // see https://www.youtube.com/watch?t=484&v=Mjrfb1r3XEM&feature=youtu.be
   const parentContexts = useContext(ProvidersContext);
   const contexts = useInit<ProvidersViewModel.ProvidersContextValue>(() => {
-    const store = new WeakMap<ProvidersViewModel.ContextIdentifier, any>();
+    const store = new Map<ProvidersViewModel.ContextIdentifier, any>();
     return {
       get: (id) => {
         const toInject = store.get(id) || parentContexts.get(id);
@@ -190,6 +190,53 @@ export function useProvide<T>(
       });
     }
   }, [value, subject]);
+}
+
+export type Pair<T = any> = [ProvidersViewModel.ContextIdentifier<T>, T];
+
+export function useProvideMany(
+  contexts: ProvidersViewModel.ProvidersContextValue,
+  pairs: Pair[],
+) {
+  const prev = useRef(pairs);
+  useInit(() => {
+    pairs.forEach(([id, value]) => {
+      if (!contexts.get(id)) {
+        contexts.set(id, new SubjectWithLatest(value));
+      }
+    });
+  }, [pairs]);
+  useEffect(() => {
+    ReactDOM.unstable_batchedUpdates(() => {
+      if (prev.current !== pairs) {
+        const next = new Set(pairs.map((v) => v[0]));
+        prev.current.forEach(([id]) => {
+          if (!next.has(id)) {
+            contexts.get(id)?.next(null);
+          }
+        });
+        pairs.forEach(([id, value]) => {
+          contexts.get(id)?.next(value);
+        });
+        prev.current = pairs;
+      }
+    });
+  }, [pairs, contexts]);
+}
+
+class SubjectWithLatest<T> extends Subject<T> {
+  constructor(v: T) {
+    super();
+    this.value = v;
+  }
+  value: T;
+  next(v: T) {
+    this.value = v;
+    super.next(v);
+  }
+  getValue() {
+    return this.value;
+  }
 }
 
 export function useInject<T>(id: ProvidersViewModel.ContextIdentifier<T>): T {
