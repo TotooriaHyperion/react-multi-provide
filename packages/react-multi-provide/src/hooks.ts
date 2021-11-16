@@ -140,10 +140,10 @@ export function useCreateContexts(): ProvidersViewModel.ProvidersContextValue {
   const contexts = useInit<ProvidersViewModel.ProvidersContextValue>(() => {
     const store = new Map<ProvidersViewModel.ContextIdentifier, any>();
     return {
-      get: (id) => {
+      get: (id, skipWarning) => {
         const toInject = store.get(id) || parentContexts.get(id);
-        if (!toInject) {
-          console.warn(`Identifier: ${id} don't have implementation provided`);
+        if (!toInject && !skipWarning) {
+          console.warn("Identifier:", id, `don't have implementation provided`);
         }
         return toInject;
       },
@@ -201,7 +201,7 @@ export function useProvideMany(
   const prev = useRef(pairs);
   useInit(() => {
     pairs.forEach(([id, value]) => {
-      if (!contexts.get(id)) {
+      if (!contexts.get(id, true)) {
         contexts.set(id, new SubjectWithLatest(value));
       }
     });
@@ -212,11 +212,11 @@ export function useProvideMany(
         const next = new Set(pairs.map((v) => v[0]));
         prev.current.forEach(([id]) => {
           if (!next.has(id)) {
-            contexts.get(id)?.next(null);
+            contexts.get(id, true)?.next(null);
           }
         });
         pairs.forEach(([id, value]) => {
-          contexts.get(id)?.next(value);
+          contexts.get(id, true)?.next(value);
         });
         prev.current = pairs;
       }
