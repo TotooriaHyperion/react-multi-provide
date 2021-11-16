@@ -21,7 +21,7 @@ export function inject<T>(
   };
 }
 
-const depsSpecMap = new WeakMap<ConstructorOrClass, Map<string, InjectSpec>>();
+const depsSpecMap = new Map<ConstructorOrClass, Map<string, InjectSpec>>();
 
 export type ConstructorOrClass = { new (): any } | Function;
 

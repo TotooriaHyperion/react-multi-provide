@@ -3,7 +3,7 @@
 - solve the problem that react context takes extra view tree.
 - also preserve reactivity of what was injected
 - fractal between providers
-- use WeakMap to store the dependencies
+- use Map to store the dependencies
 - use Object wrapped symbol to achieve better typescript support, dependency injection & debug experience
 - v2.x
   - support [dependency injection](#dependency-injection)
