@@ -143,7 +143,11 @@ export function useCreateContexts(): ProvidersViewModel.ProvidersContextValue {
       get: (id, skipWarning) => {
         const toInject = store.get(id) || parentContexts.get(id);
         if (!toInject && !skipWarning) {
-          console.warn("Identifier:", id, `don't have implementation provided`);
+          console.warn(
+            "Identifier:",
+            id?.toString?.() ?? id,
+            `don't have implementation provided`,
+          );
         }
         return toInject;
       },

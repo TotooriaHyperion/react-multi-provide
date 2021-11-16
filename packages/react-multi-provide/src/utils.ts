@@ -12,7 +12,6 @@ export function createId<T>(
       [Symbol.toStringTag]: () => symbol.toString(),
       toString: () => symbol.toString(),
       valueOf: () => symbol.toString(),
-      symbolAs: () => symbol,
     };
   }
   return idMap[symbol];
