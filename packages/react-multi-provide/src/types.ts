@@ -14,7 +14,8 @@ export module ProvidersViewModel {
       value: SubscribableWithInitialValue<T>,
     ) => void;
   }
-  export interface ContextIdentifier<T = any> extends Symbol {}
+  // don't extends any object, see https://github.com/microsoft/TypeScript/issues/46834
+  export interface ContextIdentifier<T = any> {}
   export interface ContextFactory<I, P = unknown> {
     (params: P): I extends ContextIdentifier<infer C> ? C : never;
   }
