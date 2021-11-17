@@ -14,6 +14,12 @@ import { useStableCallback } from "./dependency_injection";
 
 type ID<T> = ProvidersViewModel.ContextIdentifier<T>;
 
+export type ValueOfId<T> = T extends ProvidersViewModel.ContextIdentifier<
+  infer P
+>
+  ? P
+  : never;
+
 export function useContexts<T1>(sources: [ID<T1>]): [T1];
 export function useContexts<T1, T2>(sources: [ID<T1>, ID<T2>]): [T1, T2];
 export function useContexts<T1, T2, T3>(
@@ -159,10 +165,12 @@ export function useCreateContexts(): ProvidersViewModel.ProvidersContextValue {
   return contexts;
 }
 
-export function useProvide<T>(
+export function useProvide<T extends ProvidersViewModel.ContextIdentifier>(
   contexts: ProvidersViewModel.ProvidersContextValue,
-  id: ProvidersViewModel.ContextIdentifier<T>,
-  value: T | ProvidersViewModel.SubscribableWithInitialValue<T>,
+  id: T,
+  value:
+    | ValueOfId<T>
+    | ProvidersViewModel.SubscribableWithInitialValue<ValueOfId<T>>,
 ) {
   const prevValueRef = useRef(value);
   const getCurrentValue = useStableCallback(() => value);
@@ -198,9 +206,13 @@ export function useProvide<T>(
 
 export type Pair<T = any> = [ProvidersViewModel.ContextIdentifier<T>, T];
 
-export function useProvideMany(
+export function useProvideMany<
+  Identifiers extends [...ProvidersViewModel.ContextIdentifier[]],
+>(
   contexts: ProvidersViewModel.ProvidersContextValue,
-  pairs: Pair[],
+  pairs: {
+    [K in keyof Identifiers]: [Identifiers[K], ValueOfId<Identifiers[K]>];
+  },
 ) {
   const prev = useRef(pairs);
   useInit(() => {

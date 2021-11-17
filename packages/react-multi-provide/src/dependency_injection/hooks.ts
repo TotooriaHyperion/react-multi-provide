@@ -7,6 +7,10 @@ import { ServiceIdentifier } from "./types";
 import { ensureDepsMap } from "./inject";
 import { useSubscription } from "use-subscription";
 
+export type ValueOfServiceId<T> = T extends ServiceIdentifier<infer P>
+  ? P
+  : never;
+
 export function useService<T extends [...ServiceIdentifier[]]>(
   ...ids: T
 ): {
@@ -42,10 +46,13 @@ export function useStableCallback<T extends AnyFn>(cb: T): T {
 // 如果转化为 function
 // 对于 class 在构造 class 的同时注册 annotation 标记依赖，在构造实例之后注入依赖
 // 对于 function
-export function useProvideService<T, Args extends any[] = []>(
+export function useProvideService<
+  T extends ServiceIdentifier,
+  Args extends any[] = [],
+>(
   contexts: ProvidersViewModel.ProvidersContextValue,
-  id: ServiceIdentifier<T>,
-  ctr: new (...args: Args) => T,
+  id: T,
+  ctr: new (...args: Args) => ValueOfServiceId<T>,
   deps: Args,
 ) {
   // 构造函数 -> depsMap: Map<Key, InjectSpec>
@@ -54,7 +61,7 @@ export function useProvideService<T, Args extends any[] = []>(
   }, [ctr]);
   // depsMap -> pair[propertyKey, serviceIdentifier] -> pair[propertyKey, service]
   const dirtyRef = useRef(true);
-  const serviceRef = useRef<T>(null as any);
+  const serviceRef = useRef<ValueOfServiceId<T>>(null as any);
   const resolveService = useStableCallback(() => {
     // 如果 dirty 说明依赖改变了，需要重新生成服务实例
     if (dirtyRef.current) {
@@ -121,18 +128,21 @@ export function useProvideService<T, Args extends any[] = []>(
   useProvide(contexts, id, s);
 }
 
-export function useConstructor<T, Args extends any[] = []>(
+export function useConstructor<
+  T extends ServiceIdentifier,
+  Args extends any[] = [],
+>(
   contexts: ProvidersViewModel.ProvidersContextValue,
-  ctr: new (...args: Args) => T,
+  ctr: new (...args: Args) => ValueOfServiceId<T>,
   deps: Args,
-): T {
+): ValueOfServiceId<T> {
   // 构造函数 -> depsMap: Map<Key, InjectSpec>
   const depsMap = useInit(() => {
     return ensureDepsMap(ctr);
   }, [ctr]);
   // depsMap -> pair[propertyKey, serviceIdentifier] -> pair[propertyKey, service]
   const dirtyRef = useRef(true);
-  const serviceRef = useRef<T>(null as any);
+  const serviceRef = useRef<ValueOfServiceId<T>>(null as any);
   const resolveService = useStableCallback(() => {
     // 如果 dirty 说明依赖改变了，需要重新生成服务实例
     if (dirtyRef.current) {

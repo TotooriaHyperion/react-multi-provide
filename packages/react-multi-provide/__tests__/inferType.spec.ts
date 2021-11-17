@@ -1,5 +1,5 @@
 import { ProvidersViewModel, useContexts } from "../src";
-import { Identifier, outerId, ToInfer } from "./interType.type";
+import { Identifier, outerId, ToInfer } from "./inferType.type";
 
 const id: Identifier<ToInfer> = Symbol("");
 const id2: ProvidersViewModel.ContextIdentifier<ToInfer> = Symbol("");

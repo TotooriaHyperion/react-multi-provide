@@ -1,4 +1,4 @@
 import { ProvidersViewModel } from "../types";
 
-export interface ServiceIdentifier<T = any>
-  extends ProvidersViewModel.ContextIdentifier<T> {}
+export type ServiceIdentifier<T = any> =
+  ProvidersViewModel.ContextIdentifier<T>;
