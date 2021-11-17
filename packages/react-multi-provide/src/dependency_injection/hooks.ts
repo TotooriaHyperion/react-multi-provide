@@ -128,21 +128,18 @@ export function useProvideService<
   useProvide(contexts, id, s);
 }
 
-export function useConstructor<
-  T extends ServiceIdentifier,
-  Args extends any[] = [],
->(
+export function useConstructor<T, Args extends any[] = []>(
   contexts: ProvidersViewModel.ProvidersContextValue,
-  ctr: new (...args: Args) => ValueOfServiceId<T>,
+  ctr: new (...args: Args) => T,
   deps: Args,
-): ValueOfServiceId<T> {
+): T {
   // 构造函数 -> depsMap: Map<Key, InjectSpec>
   const depsMap = useInit(() => {
     return ensureDepsMap(ctr);
   }, [ctr]);
   // depsMap -> pair[propertyKey, serviceIdentifier] -> pair[propertyKey, service]
   const dirtyRef = useRef(true);
-  const serviceRef = useRef<ValueOfServiceId<T>>(null as any);
+  const serviceRef = useRef<T>(null as any);
   const resolveService = useStableCallback(() => {
     // 如果 dirty 说明依赖改变了，需要重新生成服务实例
     if (dirtyRef.current) {

@@ -1,4 +1,5 @@
 import {
+  useConstructor,
   useContexts,
   useCreateContexts,
   useProvide,
@@ -54,4 +55,7 @@ test("strict type", () => {
   const [d3, e3] = useContexts(ctx, id, id2);
   d3.num;
   e3.b;
+
+  const e4 = useConstructor(ctx, DD, []);
+  e4.num;
 });
