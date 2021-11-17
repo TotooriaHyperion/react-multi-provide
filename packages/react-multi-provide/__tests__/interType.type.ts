@@ -10,9 +10,8 @@ export interface Newable<T> {
   new (): T;
 }
 
-export type Identifier<T = any> =
-  | ProvidersViewModel.ContextIdentifier<T>
-  | ServiceIdentifier<T>;
+export type Identifier<T = any> = ProvidersViewModel.ContextIdentifier<T> &
+  ServiceIdentifier<T>;
 
 export type ToInfer = {
   num: number;

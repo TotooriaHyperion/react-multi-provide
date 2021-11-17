@@ -1,5 +1,7 @@
 import { Subject } from "rxjs";
 
+const typesymbol = Symbol("");
+
 export module ProvidersViewModel {
   export interface SubscribableWithInitialValue<T> extends Subject<any> {
     getValue: () => T;
@@ -14,8 +16,9 @@ export module ProvidersViewModel {
       value: SubscribableWithInitialValue<T>,
     ) => void;
   }
-  // don't extends any object, see https://github.com/microsoft/TypeScript/issues/46834
-  export interface ContextIdentifier<T = any> {}
+  export interface ContextIdentifier<T = any> extends Symbol {
+    [typesymbol]?: T;
+  }
   export interface ContextFactory<I, P = unknown> {
     (params: P): I extends ContextIdentifier<infer C> ? C : never;
   }
