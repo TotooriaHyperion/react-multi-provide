@@ -18,6 +18,7 @@ export const Providers: React.FC<ProvidersProps> = ({ contexts, children }) => {
   const currContext = useInit<ProvidersViewModel.ProvidersContextValue>(() => {
     return {
       get: (id) => contexts.get(id),
+      getCurrent: (id) => contexts.get(id),
       set() {
         // placeholder
       },

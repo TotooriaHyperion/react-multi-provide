@@ -7,10 +7,8 @@ export module ProvidersViewModel {
     getValue: () => T;
   }
   export interface ProvidersContextValue {
-    get<T>(
-      id: ContextIdentifier<T>,
-      skipWarning?: boolean,
-    ): SubscribableWithInitialValue<T>;
+    get<T>(id: ContextIdentifier<T>): SubscribableWithInitialValue<T>;
+    getCurrent<T>(id: ContextIdentifier<T>): SubscribableWithInitialValue<T>;
     set: <T>(
       id: ContextIdentifier<T>,
       value: SubscribableWithInitialValue<T>,

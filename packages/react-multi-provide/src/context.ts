@@ -5,9 +5,9 @@ const noop = (..._args: any[]): any => {};
 
 const emptyContext: ProvidersViewModel.ProvidersContextValue = {
   get: noop,
+  getCurrent: noop,
   set: noop,
 };
 
-export const ProvidersContext = createContext<
-  ProvidersViewModel.ProvidersContextValue
->(emptyContext);
+export const ProvidersContext =
+  createContext<ProvidersViewModel.ProvidersContextValue>(emptyContext);
